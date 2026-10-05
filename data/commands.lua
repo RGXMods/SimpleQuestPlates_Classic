@@ -6,6 +6,8 @@
 --=====================================================================================
 
 local addonName, SQP = ...
+local SQPSettings = SQP.db.global
+local RGX = _G.RGXFramework
 local format = string.format
 local tonumber = tonumber
 local type = type
@@ -41,10 +43,11 @@ function SQP:ShowHelp()
     print(GetText(self, "CMD_HELP_SCALE", "  |cfffff569/sqp scale <0.5-2.0>|r - Set icon scale"))
     print(GetText(self, "CMD_HELP_OFFSET", "  |cfffff569/sqp offset <x> <y>|r - Set icon offset"))
     print(GetText(self, "CMD_HELP_ANCHOR", "  |cfffff569/sqp anchor <LEFT|RIGHT>|r - Set icon anchor side"))
+    print("  |cfffff569/sqp icon on|r / |cfffff569off|r - Show or hide the minimap icon")
     print(GetText(self, "CMD_HELP_RESET", "  |cfffff569/sqp reset|r - Reset all settings"))
     print(GetText(self, "CMD_HELP_OPTIONS", "  |cfffff569/sqp options|r - Open the options panel"))
     print(GetText(self, "CMD_HELP_VERSION", "  |cfffff569/sqp version|r - Show addon version"))
-    self:PrintMessage(GetText(self, "COMMUNITY_MESSAGE", GetText(self, "MSG_DISCORD", "Join our Discord: |cff58be81discord.gg/rgxmods|r")))
+    self:PrintMessage(GetText(self, "COMMUNITY_MESSAGE", GetText(self, "MSG_DISCORD", "Join our Discord: |cff58be81discord.gg/N7kdKAHVVF|r")))
 end
 
 -- Test quest detection on current nameplates
@@ -80,13 +83,17 @@ function SQP:ShowStatus()
     local scaleLine = GetText(self, "STATUS_SCALE", GetText(self, "CMD_STATUS_SCALE", "  Scale: |cff58be81%.1f|r"))
     local offsetLine = GetText(self, "STATUS_OFFSET", GetText(self, "CMD_STATUS_OFFSET", "  Offset: |cff58be81X=%d, Y=%d|r"))
     local anchorLine = GetText(self, "STATUS_ANCHOR", GetText(self, "CMD_STATUS_ANCHOR", "  Anchor: |cff58be81%s|r"))
+    local minimapLine = "  Minimap Icon: %s"
+    local shownText = "|cff00ff00SHOWN|r"
+    local hiddenText = "|cffff0000HIDDEN|r"
 
     self:PrintMessage(statusHeader)
-    print(format(statusLine, SQP:GetSettings().enabled and enabledText or disabledText))
+    print(format(statusLine, SQPSettings.enabled and enabledText or disabledText))
     print(format(versionLine, self.VERSION or "unknown"))
-    print(format(scaleLine, SQP:GetSettings().scale or 1))
-    print(format(offsetLine, SQP:GetSettings().offsetX or 0, SQP:GetSettings().offsetY or 0))
-    print(format(anchorLine, SQP:GetSettings().anchor or "RIGHT"))
+    print(format(scaleLine, SQPSettings.scale or 1.1))
+    print(format(offsetLine, SQPSettings.offsetX or 0, SQPSettings.offsetY or 0))
+    print(format(anchorLine, SQPSettings.anchor or "RIGHT"))
+    print(format(minimapLine, SQPSettings.minimapIconEnabled ~= false and shownText or hiddenText))
 end
 
 function SQP:DebugTarget()
@@ -140,7 +147,7 @@ function SQP:SetScale(scale)
         return
     end
     
-    SQP:GetSettings().scale = scale
+    SQPSettings.scale = scale
     self:SaveSettings()
     self:PrintMessage(format(GetText(self, "SETTINGS_SCALE_SET", GetText(self, "CMD_SCALE_SET", "Icon scale set to: |cff58be81%.1f|r")), scale))
     self:RefreshAllNameplates()
@@ -155,8 +162,8 @@ function SQP:SetOffset(x, y)
         return
     end
     
-    SQP:GetSettings().offsetX = x
-    SQP:GetSettings().offsetY = y
+    SQPSettings.offsetX = x
+    SQPSettings.offsetY = y
     self:SaveSettings()
     self:PrintMessage(format(GetText(self, "SETTINGS_OFFSET_SET", GetText(self, "CMD_OFFSET_SET", "Icon offset set to: |cff58be81X=%d, Y=%d|r")), x, y))
     self:RefreshAllNameplates()
@@ -170,8 +177,8 @@ function SQP:SetAnchor(anchor)
         return
     end
     
-    SQP:GetSettings().anchor = anchor
-    SQP:GetSettings().relativeTo = anchor == "LEFT" and "RIGHT" or "LEFT"
+    SQPSettings.anchor = anchor
+    SQPSettings.relativeTo = anchor == "LEFT" and "RIGHT" or "LEFT"
     self:SaveSettings()
     self:PrintMessage(format(GetText(self, "SETTINGS_ANCHOR_SET", "Anchor set to: |cff58be81%s|r"), anchor))
     self:RefreshAllNameplates()
@@ -207,11 +214,15 @@ function SQP:ProcessSlashCommand(input)
     elseif input:match("^anchor%s+(.+)") then
         local anchor = input:match("^anchor%s+(.+)")
         self:SetAnchor(anchor)
+    elseif input == "icon on" then
+        self:ToggleMinimapIcon(true)
+    elseif input == "icon off" then
+        self:ToggleMinimapIcon(false)
     elseif input == "options" or input == "config" then
         self:OpenOptions()
     elseif input == "debug" then
-        SQP:GetSettings().debug = not SQP:GetSettings().debug
-        self:PrintMessage(format("Debug mode: %s", SQP:GetSettings().debug and "ON" or "OFF"))
+        SQPSettings.debug = not SQPSettings.debug
+        self:PrintMessage(format("Debug mode: %s", SQPSettings.debug and "ON" or "OFF"))
     elseif input == "debug target" then
         self:DebugTarget()
     elseif input == "debug nameplates" then
@@ -221,8 +232,7 @@ function SQP:ProcessSlashCommand(input)
     end
 end
 
--- Register slash commands
-SLASH_SQP1 = "/" .. CHAT_COMMAND
-SlashCmdList["SQP"] = function(input)
+-- Register slash command via RGX-Framework
+RGX:RegisterSlashCommand("/" .. CHAT_COMMAND, function(input)
     SQP:ProcessSlashCommand(input)
-end
+end, "SQP")
