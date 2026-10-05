@@ -6,14 +6,16 @@
 --=====================================================================================
 
 local addonName, SQP = ...
+local SQPSettings = SQP.db.global
 
--- Create main event frame
-SQP.eventFrame = CreateFrame("Frame", "SQPEventFrame", UIParent)
+local RGX = _G.RGXFramework
 
--- Event handler function
-local function OnEvent(self, event, ...)
-    if SQP[event] then
-        SQP[event](SQP, ...)
+local function TryInitializeUI()
+    if not SQPSettings then
+        return
+    end
+    if SQP and type(SQP.InitializeFrameworkUI) == "function" then
+        SQP:InitializeFrameworkUI()
     end
 end
 
@@ -22,35 +24,40 @@ function SQP:ADDON_LOADED(addon)
     if addon ~= addonName then return end
     
     self:LoadSettings()
+    -- Adopt the client-loaded SavedVariables into the database before use:
+    -- the DB was constructed at file load, before SVs deserialized.
+    if self.db and type(self.db.Adopt) == "function" then
+        pcall(function() self.db:Adopt() end)
+    end
+    self:MigrateLegacyFontDefaults()
+    TryInitializeUI()
     
     -- Reanchor existing plates after settings load
     for plate, questFrame in pairs(self.QuestPlates) do
         if questFrame then
-            questFrame.icon:ClearAllPoints()
-            questFrame.icon:SetPoint(
-                SQP:GetSettings().anchor or 'RIGHT',
-                questFrame,
-                SQP:GetSettings().relativeTo or 'LEFT',
-                (SQP:GetSettings().offsetX or 0) / (SQP:GetSettings().scale or 1),
-                (SQP:GetSettings().offsetY or 0) / (SQP:GetSettings().scale or 1)
-            )
-            questFrame:SetScale(SQP:GetSettings().scale or 1)
+            self:RefreshQuestPlateAnchor(plate)
+            questFrame:SetScale(SQPSettings.scale or 1.1)
         end
     end
     
-    self.eventFrame:UnregisterEvent("ADDON_LOADED")
+    RGX:UnregisterEvent("ADDON_LOADED", "SQP_ADDON_LOADED")
 end
 
 -- PLAYER_LOGIN: Initialize addon systems
 function SQP:PLAYER_LOGIN()
     -- Welcome message (two-line SQP green format)
     local loadedLine = self.L["MSG_LOADED_LINE1"] or "Loaded successfully. Type |cfffff569/sqp help|r for commands."
-    local versionLine = self.L["MSG_LOADED_LINE2"] or "|cfffff569Version:|r |cff7598b6v%s|r"
+    local versionLine = self.L["MSG_LOADED_LINE2"] or "|cffffff00Version:|r |cff8080ff%s|r"
     self:PrintMessage(loadedLine)
     self:PrintMessage(string.format(versionLine, self.VERSION))
     
-    -- Create options panel
-    self:CreateOptionsPanel()
+    -- Framework-driven UI bootstrap
+    TryInitializeUI()
+    -- Register the options category on login, before a minimap or slash click.
+    -- The framework builds visible tab content when the panel is first opened.
+    if not self.optionsPanel and type(self.CreateOptionsPanel) == "function" then
+        self:CreateOptionsPanel()
+    end
     
     -- Load world quests
     self:LoadWorldQuests()
@@ -61,7 +68,9 @@ end
 
 -- Nameplate events
 function SQP:NAME_PLATE_CREATED(plate)
-    self:CreateQuestPlate(plate)
+    -- Keep NAME_PLATE_CREATED cheap. Building the full overlay here can happen
+    -- in large batches during login/area transitions and trip WoW's script timer.
+    self.Nameplates[plate] = plate
 end
 
 function SQP:NAME_PLATE_UNIT_ADDED(unitID)
@@ -99,28 +108,34 @@ function SQP:UPDATE_MOUSEOVER_UNIT()
     end
 end
 
--- Quest events with throttling
-local questUpdateThrottle = 0
-local QUEST_UPDATE_THROTTLE = 0.3  -- 300ms throttle
+-- Raid markers changed: marked plates must drop their quest overlay (and
+-- unmarked plates may regain it). Read-only re-evaluation; Blizzard keeps
+-- full ownership of the marker frames.
+function SQP:RAID_TARGET_UPDATE()
+    self:ReevaluateActivePlates()
+    self:RefreshAllNameplates()
+end
+
+-- Quest events with throttling (using RGX:After for debounce)
+local questUpdatePending = false
 
 function SQP:UNIT_QUEST_LOG_CHANGED(unitID)
-    -- Only process player quest changes, ignore group members
-    if unitID == "player" then
-        self:CacheQuestIndexes()
-    end
-    -- Removed unnecessary full refresh for non-player units
+	-- Only process player quest changes, ignore group members
+	if unitID == "player" then
+		self:CacheQuestIndexes()
+	end
 end
 
 function SQP:QUEST_LOG_UPDATE()
-    -- Throttle this spammy event
-    local currentTime = GetTime()
-    if currentTime - questUpdateThrottle < QUEST_UPDATE_THROTTLE then
-        return
-    end
-    questUpdateThrottle = currentTime
-    
-    self:CacheQuestIndexes()
-    self:RefreshAllNameplates()
+	-- Debounce this spammy event using RGX:After
+	if questUpdatePending then return end
+	questUpdatePending = true
+	RGX:After(0.3, function()
+		questUpdatePending = false
+		self:CacheQuestIndexes()
+		self:ReevaluateActivePlates()
+		self:RefreshAllNameplates()
+	end)
 end
 
 function SQP:QUEST_ACCEPTED(questLogIndex, questID)
@@ -141,11 +156,13 @@ function SQP:QUEST_REMOVED(questID)
         end
     end
     self:UNIT_QUEST_LOG_CHANGED('player')
+    self:ReevaluateActivePlates()
     self:RefreshAllNameplates()
 end
 
 function SQP:QUEST_COMPLETE()
     -- Quest objectives all met — refresh immediately so icons hide promptly
+    self:ReevaluateActivePlates()
     self:RefreshAllNameplates()
 end
 
@@ -155,11 +172,11 @@ end
 
 -- World state events
 function SQP:PLAYER_LEAVING_WORLD()
-    self.eventFrame:UnregisterEvent("QUEST_LOG_UPDATE")
+    RGX:UnregisterEvent("QUEST_LOG_UPDATE", "SQP_QUEST_LOG_UPDATE")
 end
 
 function SQP:PLAYER_ENTERING_WORLD()
-    self.eventFrame:RegisterEvent("QUEST_LOG_UPDATE")
+    RGX:RegisterEvent("QUEST_LOG_UPDATE", function(event, ...) SQP:QUEST_LOG_UPDATE(...) end, "SQP_QUEST_LOG_UPDATE")
     -- Refresh all nameplates when entering world
     self:RefreshAllNameplates()
 end
@@ -167,42 +184,45 @@ end
 -- Combat state changes
 function SQP:PLAYER_REGEN_DISABLED()
     -- Entered combat
-    local animationMode = SQP:GetSettings().animationCombatMode or "always"
-    if SQP:GetSettings().hideInCombat or animationMode ~= "always" then
+    local animationMode = SQPSettings.animationCombatMode or "always"
+    if SQPSettings.hideInCombat or animationMode ~= "always" then
         self:RefreshAllNameplates()
     end
 end
 
 function SQP:PLAYER_REGEN_ENABLED()
     -- Left combat
-    local animationMode = SQP:GetSettings().animationCombatMode or "always"
-    if SQP:GetSettings().hideInCombat or animationMode ~= "always" then
+    local animationMode = SQPSettings.animationCombatMode or "always"
+    if SQPSettings.hideInCombat or animationMode ~= "always" then
         self:RefreshAllNameplates()
     end
 end
 
--- Register all events
-SQP.eventFrame:SetScript("OnEvent", OnEvent)
-SQP.eventFrame:RegisterEvent("ADDON_LOADED")
-SQP.eventFrame:RegisterEvent("PLAYER_LOGIN")
+-- Register all events via RGX-Framework
+RGX:RegisterEvent("ADDON_LOADED", function(event, ...) SQP:ADDON_LOADED(...) end, "SQP_ADDON_LOADED")
+RGX:RegisterEvent("PLAYER_LOGIN", function(event, ...) SQP:PLAYER_LOGIN(...) end, "SQP_PLAYER_LOGIN")
+RGX:OnReady(function()
+    TryInitializeUI()
+end)
 
 -- Register nameplate events based on version
 if C_NamePlate and C_NamePlate.GetNamePlateForUnit then
     -- Modern nameplate API is available
-    SQP.eventFrame:RegisterEvent("NAME_PLATE_CREATED")
-    SQP.eventFrame:RegisterEvent("NAME_PLATE_UNIT_ADDED")
-    SQP.eventFrame:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
+    RGX:RegisterEvent("NAME_PLATE_CREATED", function(event, ...) SQP:NAME_PLATE_CREATED(...) end, "SQP_NAME_PLATE_CREATED")
+    RGX:RegisterEvent("NAME_PLATE_UNIT_ADDED", function(event, ...) SQP:NAME_PLATE_UNIT_ADDED(...) end, "SQP_NAME_PLATE_UNIT_ADDED")
+    RGX:RegisterEvent("NAME_PLATE_UNIT_REMOVED", function(event, ...) SQP:NAME_PLATE_UNIT_REMOVED(...) end, "SQP_NAME_PLATE_UNIT_REMOVED")
 end
 -- MoP and older versions use the OnUpdate script in compat_mop.lua
 
-SQP.eventFrame:RegisterEvent("UNIT_QUEST_LOG_CHANGED")
-SQP.eventFrame:RegisterEvent("QUEST_ACCEPTED")
-SQP.eventFrame:RegisterEvent("QUEST_REMOVED")
-SQP.eventFrame:RegisterEvent("QUEST_COMPLETE")
-SQP.eventFrame:RegisterEvent("QUEST_WATCH_LIST_CHANGED")
-SQP.eventFrame:RegisterEvent("PLAYER_LEAVING_WORLD")
-SQP.eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-SQP.eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
-SQP.eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-SQP.eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
-SQP.eventFrame:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
+RGX:RegisterEvent("UNIT_QUEST_LOG_CHANGED", function(event, ...) SQP:UNIT_QUEST_LOG_CHANGED(...) end, "SQP_UNIT_QUEST_LOG_CHANGED")
+RGX:RegisterEvent("QUEST_ACCEPTED", function(event, ...) SQP:QUEST_ACCEPTED(...) end, "SQP_QUEST_ACCEPTED")
+RGX:RegisterEvent("QUEST_REMOVED", function(event, ...) SQP:QUEST_REMOVED(...) end, "SQP_QUEST_REMOVED")
+RGX:RegisterEvent("QUEST_COMPLETE", function(event, ...) SQP:QUEST_COMPLETE(...) end, "SQP_QUEST_COMPLETE")
+RGX:RegisterEvent("QUEST_WATCH_LIST_CHANGED", function(event, ...) SQP:QUEST_WATCH_LIST_CHANGED(...) end, "SQP_QUEST_WATCH_LIST_CHANGED")
+RGX:RegisterEvent("PLAYER_LEAVING_WORLD", function(event, ...) SQP:PLAYER_LEAVING_WORLD(...) end, "SQP_PLAYER_LEAVING_WORLD")
+RGX:RegisterEvent("PLAYER_ENTERING_WORLD", function(event, ...) SQP:PLAYER_ENTERING_WORLD(...) end, "SQP_PLAYER_ENTERING_WORLD")
+RGX:RegisterEvent("PLAYER_REGEN_DISABLED", function(event, ...) SQP:PLAYER_REGEN_DISABLED(...) end, "SQP_PLAYER_REGEN_DISABLED")
+RGX:RegisterEvent("PLAYER_REGEN_ENABLED", function(event, ...) SQP:PLAYER_REGEN_ENABLED(...) end, "SQP_PLAYER_REGEN_ENABLED")
+RGX:RegisterEvent("PLAYER_TARGET_CHANGED", function(event, ...) SQP:PLAYER_TARGET_CHANGED(...) end, "SQP_PLAYER_TARGET_CHANGED")
+RGX:RegisterEvent("UPDATE_MOUSEOVER_UNIT", function(event, ...) SQP:UPDATE_MOUSEOVER_UNIT(...) end, "SQP_UPDATE_MOUSEOVER_UNIT")
+RGX:RegisterEvent("RAID_TARGET_UPDATE", function(event, ...) SQP:RAID_TARGET_UPDATE(...) end, "SQP_RAID_TARGET_UPDATE")

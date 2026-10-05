@@ -33,7 +33,7 @@ local function GetNameplateChildren()
     for i = 1, 40 do
         local frame = _G["NamePlate" .. i]
         if frame and frame:IsVisible() then
-            tinsert(frames, frame)
+            table.insert(frames, frame)
         end
     end
     return frames
@@ -206,7 +206,7 @@ function SQP:PLAYER_TARGET_CHANGED()
 end
 
 -- Register the event
-SQP.eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+-- PLAYER_TARGET_CHANGED is registered in events.lua through RGX.
 
 -- Hook into UPDATE_MOUSEOVER_UNIT for better unit matching
 local originalMouseoverUpdate = SQP.UPDATE_MOUSEOVER_UNIT
@@ -226,4 +226,4 @@ function SQP:UPDATE_MOUSEOVER_UNIT()
 end
 
 -- Register the event
-SQP.eventFrame:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
+-- UPDATE_MOUSEOVER_UNIT is registered in events.lua through RGX.
