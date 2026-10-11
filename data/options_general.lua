@@ -71,7 +71,9 @@ local function BuildGeneralPage(leftColumn)
         local right = CreateFrame("Frame", nil, c)
         right:SetPoint("TOPLEFT", c, "TOP", 0, 0)
         right:SetPoint("TOPRIGHT", c, "TOPRIGHT", 0, 0)
-        right:SetHeight(44)
+        -- Right column: two checkboxes stacked (44px) + two small action
+        -- buttons stacked at the bottom-right (44px) = 88px total.
+        right:SetHeight(88)
         local yOffset = -8
 
         local chatFrame = SQP:CreateStyledCheckbox(c, "Chat Messages")
@@ -109,11 +111,27 @@ local function BuildGeneralPage(leftColumn)
             SQP:SetSetting('hideInInstance', self:GetChecked()); SQP:RefreshAllNameplates()
         end)
 
-        yOffset = yOffset - 8
-        local resetButton = SQP:CreateStyledButton(c, SQP.L["OPTIONS_RESET"] or "Reset All Settings", 138, 20)
-        resetButton:SetPoint("TOP", c, "TOP", 0, yOffset)
+        -- Lower-right corner: Test Detection over Reset All Settings.
+        -- Small Blizzard font via GameFontNormalSmall; RGXFonts extension via ApplyDefaultFont.
+        local function ApplySmallButtonFont(btn)
+            local fs = (btn.GetFontString and btn:GetFontString()) or btn.text
+            if fs and fs.SetFontObject then
+                pcall(fs.SetFontObject, fs, GameFontNormalSmall)
+                SQP:ApplyDefaultFont(fs)
+            end
+        end
+        local btnWidth = 118
+        local testButton = SQP:CreateStyledButton(right, SQP.L["OPTIONS_TEST"] or "Test Detection", btnWidth, 18)
+        testButton:SetPoint("BOTTOMRIGHT", right, "BOTTOMRIGHT", -8, 22)
+        testButton:SetScript("OnClick", function() SQP:TestQuestDetection() end)
+        SQP:SetControlTooltip(testButton, "Scan visible enemy nameplates and report quest objectives found.")
+        ApplySmallButtonFont(testButton)
+
+        local resetButton = SQP:CreateStyledButton(right, SQP.L["OPTIONS_RESET"] or "Reset All Settings", btnWidth, 18)
+        resetButton:SetPoint("BOTTOMRIGHT", right, "BOTTOMRIGHT", -8, 0)
         resetButton:SetAlpha(0.8)
         resetButton:SetScript("OnClick", function() StaticPopup_Show("SQP_RESET_CONFIRM") end)
+        ApplySmallButtonFont(resetButton)
         generalCard:FitContent()
     end
     return generalCard
