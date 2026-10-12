@@ -590,8 +590,3 @@ function SQP:OpenOptions()
         self.optionsPanel:Show()
     end
 end
-
--- Refresh all nameplates to apply new settings
-function SQP:RefreshAllNameplates()
-    -- This function will be defined in nameplates.lua
-end

@@ -34,7 +34,7 @@ function SQP:CreateIconOptions(content)
 		storage = SQPSettings,
 		width = 160,
 		onChange = function(value)
-			SQP:RefreshAllNameplates()
+			SQP:RefreshPositions()
 		end,
 	})
 	xSlider:SetPoint("TOPLEFT", 20, yOffset)
@@ -53,7 +53,7 @@ function SQP:CreateIconOptions(content)
 		storage = SQPSettings,
 		width = 160,
 		onChange = function(value)
-			SQP:RefreshAllNameplates()
+			SQP:RefreshPositions()
 		end,
 	})
 	ySlider:SetPoint("TOPLEFT", 20, yOffset)
