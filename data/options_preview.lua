@@ -973,7 +973,12 @@ function SQP:CreatePreviewSection(parent)
     return previewFrame
 end
 
--- Hook into refresh function
+-- Hook into refresh function. Captures the live implementation from
+-- data/nameplates.lua (data/compat_mop.lua on MoP Classic) — with the old
+-- late empty stub in core.lua removed, this capture is never shadowed —
+-- and updates the preview after the live plates are refreshed. Guarded
+-- with pcall like every other preview update path so a preview build
+-- failure can never abort the live refresh that called it.
 local oldRefresh = SQP.RefreshAllNameplates
 function SQP:RefreshAllNameplates()
     -- Call original function
@@ -983,7 +988,7 @@ function SQP:RefreshAllNameplates()
 
     -- Update preview if it exists
     if self.previewFrame then
-        self.previewFrame:UpdatePreview()
+        pcall(function() self.previewFrame:UpdatePreview() end)
 
         -- Re-apply current quest type colors
         if self.previewFrame.iconText then

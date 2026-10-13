@@ -583,6 +583,20 @@ function SQP:RefreshQuestPlateAnchor(nameplate, force)
     self:ApplyQuestLayout(questFrame, target)
 end
 
+-- Re-anchor existing quest overlays (and the options preview) to the current
+-- X/Y offset, scale and anchor settings without rescanning plates or
+-- re-running quest detection. Full RefreshAllNameplates re-evaluates quest
+-- state per plate, which visibly flickers when a position slider fires it
+-- on every drag tick; this path only moves already-built icons.
+function SQP:RefreshPositions()
+    for plate, questFrame in pairs(self.QuestPlates) do
+        if questFrame and questFrame.icon and not questFrame.isPreview then
+            self:RefreshQuestPlateAnchor(plate, true)
+        end
+    end
+    self:UpdatePreviewManually()
+end
+
 -- Rebuild every quest overlay after switching unified/legacy mode
 function SQP:RebuildQuestPlates()
     local active = {}
