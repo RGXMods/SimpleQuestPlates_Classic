@@ -29,7 +29,8 @@ on:
 
 env:
   CF_API_KEY: ${{ secrets.CF_API_KEY }}
-  WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
+  # Optional distribution: preserve the existing connection, opt in explicitly.
+  WAGO_API_TOKEN: ${{ vars.PUBLISH_WAGO == 'true' && secrets.WAGO_API_TOKEN || '' }}
   GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
@@ -177,7 +178,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CF_API_KEY: ${{ secrets.CF_API_KEY }}
-          WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
         run: |
           version="${{ steps.version.outputs.version }}"
           short="${version#v}"
@@ -209,7 +209,7 @@ jobs:
               footer="RGX Mods • Stable Release"
               description="A new stable release is live. Level up in style!"
               release_url="https://github.com/RGXMods/SimpleQuestPlates_Classic/releases/tag/v${version#v}"
-              downloads="[CurseForge](https://www.curseforge.com/wow/addons/simple-quest-plates) • [Wago](https://addons.wago.io/addons/simple-quest-plates) • [GitHub](${release_url})"
+              downloads="[GitHub](${release_url})"
               channel="Release"
               ;;
             "beta")
