@@ -208,7 +208,8 @@ async function publishCurseForge({ projectId, apiKey, flavors, version, releaseT
     changelogType: "markdown",
   });
   const form = new FormData();
-  form.append("metadata", new Blob([metadata], { type: "application/json" }));
+  // CurseForge reads metadata as a text form field, not an uploaded file.
+  form.append("metadata", metadata);
   form.append("file", new Blob([readFileSync(archive)]), basename(archive));
 
   const uploadUrl = `https://wow.curseforge.com/api/projects/${projectId}/upload-file`;

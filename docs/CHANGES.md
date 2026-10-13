@@ -1,3 +1,10 @@
+# 1.9.10-classic.2 - 2026-10-13
+
+## Changes
+- Fix CurseForge upload metadata encoding so stable Classic releases reach the correct project.
+- Add a regression check for the actual multipart request shape.
+- Preserve the operator-tested runtime; only the release version changes.
+
 # 1.9.10-classic.1 - 2026-10-13
 
 ## Changes
