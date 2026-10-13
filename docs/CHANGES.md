@@ -1,3 +1,10 @@
+# 1.9.10-classic.1 - 2026-10-13
+
+## Changes
+- Promote the operator-tested Classic UI build to stable; remove the beta label without changing runtime behavior.
+- Preserve Classic Era, Burning Crusade Classic, and Mists of Pandaria Classic support and settings.
+- Make optional Wago publishing explicitly opt-in; required GitHub and CurseForge publication remains unchanged.
+
 # 1.9.9-classic.3 - 2026-09-29
 
 ## Changes
