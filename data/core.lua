@@ -527,10 +527,10 @@ function SQP:SetupMinimapButton()
         tooltip = {
             title = SQP.NAME or "Simple Quest Plates!",
             lines = {
-                { left = "|cff58be81Left-Click|r",       right = "Open options" },
+                { left = "|cff58be81Left-Click|r",       right = self.L["MINIMAP_TOOLTIP_OPEN_OPTIONS"] or "Open options" },
                 { left = "|cff58be81Right-Click|r",      right = SQPSettings.enabled and "Disable overlays" or "Enable overlays" },
-                { left = "|cff4ecdc4Drag|r",             right = "Move around minimap" },
-                { left = "|cffe74c3cCtrl+Right-Click|r", right = "Hide minimap icon" },
+                { left = "|cff4ecdc4Drag|r",             right = self.L["MINIMAP_TOOLTIP_MOVE"] or "Move around minimap" },
+                { left = "|cffe74c3cCtrl+Right-Click|r", right = self.L["MINIMAP_TOOLTIP_HIDE"] or "Hide minimap icon" },
             },
         },
         onLeftClick = function() SQP:ToggleOptions() end,
@@ -547,9 +547,9 @@ function SQP:ToggleMinimapIcon(show, silent)
     self.minimapBtn:SetVisible(show)
     if not silent then
         if show then
-            self:PrintMessage("Minimap icon shown.")
+            self:PrintMessage(self.L["MINIMAP_ICON_SHOWN"] or "Minimap icon shown.")
         else
-            self:PrintMessage("Minimap icon hidden. Use |cfffff569/sqp icon on|r to show it again.")
+            self:PrintMessage(self.L["MINIMAP_ICON_HIDDEN"] or "Minimap icon hidden. Use |cfffff569/sqp icon on|r to show it again.")
         end
     end
 end

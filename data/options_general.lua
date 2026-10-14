@@ -65,7 +65,7 @@ end
 
 -- Global behavior toggles and the reset action.
 local function BuildGeneralPage(leftColumn)
-    local generalCard = Card(leftColumn, "General")
+    local generalCard = Card(leftColumn, SQP.L["OPTIONS_GENERAL"] or "General Settings")
     do
         local c = generalCard.content
         local right = CreateFrame("Frame", nil, c)
@@ -76,7 +76,7 @@ local function BuildGeneralPage(leftColumn)
         right:SetHeight(88)
         local yOffset = -8
 
-        local chatFrame = SQP:CreateStyledCheckbox(c, "Chat Messages")
+        local chatFrame = SQP:CreateStyledCheckbox(c, SQP.L["OPTIONS_CHAT_MESSAGES"] or "Chat Messages")
         chatFrame:SetPoint("TOPLEFT", 8, yOffset)
         chatFrame.checkbox:SetChecked(SQPSettings.showMessages ~= false)
         SQP.optionControls.showMessages = chatFrame.checkbox
@@ -95,7 +95,7 @@ local function BuildGeneralPage(leftColumn)
         SQP:SetControlTooltip(minimapFrame, "Left-click opens options. Drag to move. Ctrl-right-click hides it.")
         yOffset = yOffset - 22
 
-        local combatFrame = SQP:CreateStyledCheckbox(right, "Hide in Combat")
+        local combatFrame = SQP:CreateStyledCheckbox(right, SQP.L["OPTIONS_HIDE_COMBAT"] or "Hide in Combat")
         combatFrame:SetPoint("TOPLEFT", 2, -8)
         combatFrame.checkbox:SetChecked(SQPSettings.hideInCombat)
         SQP.optionControls.hideInCombat = combatFrame.checkbox
@@ -103,7 +103,7 @@ local function BuildGeneralPage(leftColumn)
             SQP:SetSetting('hideInCombat', self:GetChecked()); SQP:RefreshAllNameplates()
         end)
 
-        local instanceFrame = SQP:CreateStyledCheckbox(right, "Hide in Instances")
+        local instanceFrame = SQP:CreateStyledCheckbox(right, SQP.L["OPTIONS_HIDE_INSTANCE"] or "Hide in Instances")
         instanceFrame:SetPoint("TOPLEFT", 2, -30)
         instanceFrame.checkbox:SetChecked(SQPSettings.hideInInstance)
         SQP.optionControls.hideInInstance = instanceFrame.checkbox
