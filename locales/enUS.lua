@@ -144,7 +144,7 @@ local L = {
     -- About panel (routed from data/options_about.lua)
     ["ABOUT_TITLE"] = "|cff8B1538RGX |cff58be81Simple Quest Plates!|r",
     ["ABOUT_FLAVOR"] = "Classic",
-    ["ABOUT_AUTHOR"] = "|cff888888By DonnieDice \u00b7 donniedice@protonmail.com|r",
+    ["ABOUT_AUTHOR"] = "|cff888888By DonnieDice · donniedice@protonmail.com|r",
     ["ABOUT_DESCRIPTION"] = "Displays quest progress icons on enemy nameplates.\nPer-type colors, tinting, font, and animation.",
     ["ABOUT_COMMUNITY_TITLE"] = "|cff58be81RGX Mods Community|r",
     ["ABOUT_COMMUNITY_DESC"] = "Join us for support, feedback, and more!",
