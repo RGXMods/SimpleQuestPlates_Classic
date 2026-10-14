@@ -297,6 +297,7 @@ _<span style="color:#e67e23">See</span> [<span style="color:#58be81">docs/CHANGE
 - <span style="color:#2dc26b">**Report bugs**</span> <span style="color:#e67e23">via</span> [<span style="color:#b96ad9">GitHub Issues</span>](https://github.com/RGXMods/SimpleQuestPlates_Classic/issues)
 - <span style="color:#ff6b6b">**Suggest features**</span> <span style="color:#e67e23">in our</span> [<span style="color:#7289da">Discord</span>](https://discord.gg/rgxmods)
 - <span style="color:#4ecdc4">**Help with translations**</span> <span style="color:#e67e23">for global players</span>
+- <span style="color:#b96ad9">**Read the</span> [<span style="color:#05dffa">docs/AGENT-DIRECTIVES.md</span>](./docs/AGENT-DIRECTIVES.md) <span style="color:#e67e23">framework-first build directives enforced by AGENTS.md before changing code</span>
 - <span style="color:#2dc26b">**Star the repository**</span> <span style="color:#e67e23">to show your support</span>
 
 ---
