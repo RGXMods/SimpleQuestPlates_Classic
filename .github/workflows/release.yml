@@ -190,8 +190,8 @@ jobs:
 
           case "$release_type" in
             "release")
-              title="SQP | Simple Quest Plates! ${version}"
-              color=35071
+              title="RGX | Simple Quest Plates! (Classic) ${version}"
+              color=385018
               footer="RGX Mods • Stable Release"
               description="A new stable release is live. Level up in style!"
               release_url="https://github.com/DonnieDice/SimpleQuestPlates/releases/tag/v${version#v}"
@@ -199,7 +199,7 @@ jobs:
               channel="Release"
               ;;
             "beta")
-              title="SQP | Simple Quest Plates! ${version} (Beta)"
+              title="RGX | Simple Quest Plates! (Classic) ${version} (Beta)"
               color=16744448
               footer="RGX Mods • Beta Build"
               description="Beta build available for testing."
@@ -208,7 +208,7 @@ jobs:
               channel="Beta"
               ;;
             "alpha"|"alpha-branch")
-              title="SQP | Simple Quest Plates! ${version} (Alpha)"
+              title="RGX | Simple Quest Plates! (Classic) ${version} (Alpha)"
               color=9109504
               footer="RGX Mods • Alpha Build"
               description="Alpha build available for testing."
@@ -217,7 +217,7 @@ jobs:
               channel="Alpha"
               ;;
             "dev")
-              title="SQP | Simple Quest Plates! ${version} (Dev)"
+              title="RGX | Simple Quest Plates! (Classic) ${version} (Dev)"
               color=3447003
               footer="RGX Mods • Dev Build"
               description="Development build from the dev branch."
@@ -226,7 +226,7 @@ jobs:
               channel="Dev"
               ;;
             *)
-              title="SQP | Simple Quest Plates! ${version}"
+              title="RGX | Simple Quest Plates! (Classic) ${version}"
               color=10000000
               footer="RGX Mods"
               description="Build completed."
@@ -237,14 +237,14 @@ jobs:
           esac
 
           jq -n \
-            --arg username "SQP Releases" \
-            --arg avatar_url "https://raw.githubusercontent.com/DonnieDice/SimpleQuestPlates/main/media/logo.png" \
+            --arg username "RGX Releases" \
+            --arg avatar_url "https://raw.githubusercontent.com/RGXMods/RGX-Framework/main/media/logo.png" \
             --arg title "$title" \
             --arg url "$release_url" \
             --arg description "$description" \
             --argjson color "$color" \
             --arg footer "$footer" \
-            --arg icon_url "https://raw.githubusercontent.com/donniedice/SimpleQuestPlates/main/media/kiwi.gif" \
+            --arg icon_url "https://raw.githubusercontent.com/RGXMods/RGX-Framework/main/media/kiwi.gif" \
             --arg timestamp "${RELEASE_TIMESTAMP}" \
             --arg summary "$summary" \
             --arg downloads "$downloads" \
@@ -279,8 +279,8 @@ jobs:
             --arg run_id "${{ github.run_id }}" \
             --arg timestamp "${{ steps.version.outputs.timestamp }}" \
             '{
-              username: "SQP Build Failed",
-              avatar_url: "https://raw.githubusercontent.com/DonnieDice/SimpleQuestPlates/main/media/logo.png",
+              username: "RGX Build Failed",
+              avatar_url: "https://raw.githubusercontent.com/RGXMods/RGX-Framework/main/media/logo.png",
               embeds: [{
                 title: "❌ SQP Build Failed",
                 description: "The release workflow encountered an error",
@@ -292,7 +292,7 @@ jobs:
                 ],
                 footer: {
                   "text": "RGX Mods - Build System",
-                  "icon_url": "https://raw.githubusercontent.com/donniedice/SimpleQuestPlates/main/media/kiwi.gif"
+                  "icon_url": "https://raw.githubusercontent.com/RGXMods/RGX-Framework/main/media/kiwi.gif"
                 },
                 timestamp: $timestamp
               }]
