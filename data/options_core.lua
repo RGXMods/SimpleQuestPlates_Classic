@@ -8,7 +8,36 @@
 local addonName, SQP = ...
 local SQPSettings = SQP.db.global
 
-SQP.SECTION_COLOR = {0.345, 0.745, 0.506}
+-- SQP's own brand pair (green primary, purple accent). SQP.Brand is the live pair the option pages read: the own
+-- pair, or the framework's main colour while its beta global theme override is on (ResolveBrand).
+SQP.OwnBrand = { primary = { 0.345, 0.745, 0.506 }, accent = { 0.737, 0.435, 0.659 } }
+SQP.Brand = { primary = { 0.345, 0.745, 0.506 }, accent = { 0.737, 0.435, 0.659 } }
+SQP.SECTION_COLOR = SQP.Brand.primary
+
+function SQP:ResolveBrand()
+    local D = _G.RGXDesign
+    local own, live = self.OwnBrand, self.Brand
+    local theme
+    if D and type(D.ResolveAddonTheme) == "function" then
+        theme = D:ResolveAddonTheme(own, nil)
+    else
+        local db = rawget(_G, "RGXFrameworkDB")
+        local preset = type(db) == "table" and db.themeOverride == true and db.themePreset
+        local chosen = preset and D and D.THEME_PRESETS and D.THEME_PRESETS[preset]
+        if type(chosen) == "table" and type(chosen.primary) == "table" then theme = chosen end
+    end
+    theme = theme or own
+    local p, a = theme.primary or own.primary, theme.accent or own.accent
+    live.primary[1], live.primary[2], live.primary[3] = p[1], p[2], p[3]
+    live.accent[1], live.accent[2], live.accent[3] = a[1], a[2], a[3]
+    return live
+end
+
+-- "|cffRRGGBB" for the live primary, for coloured text on the option pages.
+function SQP:BrandHex()
+    local c = self.Brand.primary
+    return string.format("|cff%02x%02x%02x", math.floor(c[1] * 255 + 0.5), math.floor(c[2] * 255 + 0.5), math.floor(c[3] * 255 + 0.5))
+end
 
 function SQP:CreateOptionsPanel()
     if self.optionsPanel then
@@ -20,9 +49,6 @@ function SQP:CreateOptionsPanel()
     -- One-time font designation for this addon (elements, buttons, and text
     -- all render through RGXFonts:GetDefault()).
     local Fonts = _G.RGXFonts
-    if RGX and type(RGX.SetHighlightColor) == "function" then
-        pcall(function() RGX:SetHighlightColor({ 0.345, 0.745, 0.506 }, { 0.737, 0.435, 0.659 }) end)
-    end
     if Fonts and type(Fonts.SetDefault) == "function" then
         pcall(function()
             Fonts:SetDefault("FrizQuadrata")
@@ -34,10 +60,10 @@ function SQP:CreateOptionsPanel()
         return
     end
 
-    -- SQP brand green (#58be81) on this addon's UI only. Hardcoded: core.lua
-    -- also writes SQP.SECTION_COLOR ("RGX Blue") and load order decides who
-    -- survives, so do not read it at runtime.
-    local BrandTheme = { primary = { 0.345, 0.745, 0.506 }, accent = { 0.737, 0.435, 0.659 } }
+    -- The brand pair: SQP's own, or the framework's main colour while its beta theme override is on. Scoped
+    -- to SQP's own UI with WithTheme below; the framework's shared theme is never changed.
+    local live = SQP:ResolveBrand()
+    local BrandTheme = { primary = live.primary, accent = live.accent }
     SQP.optionsTheme = BrandTheme
     local Design = _G.RGXDesign
     local function WithBrand(fn)

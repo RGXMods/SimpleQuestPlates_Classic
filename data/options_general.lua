@@ -286,7 +286,7 @@ local function BuildDisplayPage(leftColumn, rightColumn, generalCard)
                 end,
             })
             if dd then
-                if dd.label then dd.label:SetTextColor(0.345, 0.745, 0.506) end
+                if dd.label then dd.label:SetTextColor(unpack(SQP.Brand.primary)) end
                 dd:SetPoint("TOPLEFT", c, "TOPLEFT", 8, yOffset)
                 dd:SetPoint("TOPRIGHT", c, "TOPRIGHT", -8, yOffset)
                 SQP:SetControlTooltip(dd, "Pick every quest type's background: Classic icon or the Forever level-frame style.")
