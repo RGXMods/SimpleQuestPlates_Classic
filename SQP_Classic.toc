@@ -8,7 +8,7 @@
 ## Category: RealmGX
 ## Group: RealmGX
 ## RequiredDeps: RGX-Framework
-## X-RGX-Framework-MinVersion: 2.7.14-beta.1
+## X-RGX-Framework-MinVersion: 2.19.0
 ## SavedVariables: SQPClassicSettings
 ## IconTexture: Interface\AddOns\SQP_Classic\media\icon
 ## DefaultState: Enabled
