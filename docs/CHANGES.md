@@ -1,4 +1,10 @@
-﻿# v2.1.1 - 2026-06-30
+# v2.1.2 - 2026-11-14
+
+## Changes
+
+- The options panel uses the main colour chosen on the RGX-Framework settings page while "Apply the framework theme to addons" is on, and SQP's own green when it is off.
+
+# v2.1.1 - 2026-06-30
 
 ## Changes
 

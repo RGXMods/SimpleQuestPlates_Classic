@@ -21,8 +21,27 @@ function SQP:CreateOptionsPanel()
         return
     end
 
+    -- Brand colours: the main colour chosen on the RGX-Framework settings page (Theme tab) while "Apply the
+    -- framework theme to addons" is on, otherwise SQP's own green. Read when the panel is built; a change
+    -- applies after a reload like the rest of the theme.
+    local function ChosenFrameworkTheme()
+        local db = _G.RGXFrameworkDB
+        local preset = type(db) == "table" and db.themeOverride ~= false and db.themePreset
+        local D = _G.RGXDesign
+        local chosen = preset and D and D.THEME_PRESETS and D.THEME_PRESETS[preset]
+        if type(chosen) ~= "table" or type(chosen.primary) ~= "table" then return nil end
+        return chosen
+    end
+    local chosen = ChosenFrameworkTheme()
+    local function Pair(c) return { c[1], c[2], c[3] } end
+    local theme = {
+        primary = chosen and Pair(chosen.primary) or { 0.345, 0.745, 0.506 },
+        accent  = chosen and chosen.accent and Pair(chosen.accent) or { 0.737, 0.435, 0.659 },
+    }
+
     self.optionsPanel = UI:CreateOptionsPanel({
         addonName    = "SimpleQuestPlates",
+        theme        = theme,
         title        = "|cff58be81S|cffffffffimple |cff58be81Q|cffffffffuest |cff58be81P|cfffffffflates|cff58be81!|r",
         subtitle     = "Quest tracking overlay for enemy nameplates",
         author       = SQP.AUTHOR or "DonnieDice",
