@@ -1,3 +1,10 @@
+# 1.9.11-classic - 2026-11-14
+
+## Changes
+- The options follow the RGX-Framework theme override (beta, off by default) live, including the headings that were always green. With the override off SQP looks as before. Requires RGX-Framework 2.19.0.
+- Opening the options no longer changes the colour of other RGX addons.
+- The version shown in chat is read from the addon (it showed 1.9.10-classic.beta.1).
+
 # 1.9.9-classic.3 - 2026-09-29
 
 ## Changes
