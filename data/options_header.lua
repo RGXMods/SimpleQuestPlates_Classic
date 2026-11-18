@@ -26,7 +26,7 @@ function SQP:CreatePanelHeader(container)
     -- Title
     local title = header:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
     title:SetPoint("LEFT", logo, "RIGHT", 10, 5)
-    title:SetText("|cff58be81S|r|cffffffffimple |cff58be81Q|r|cffffffffuest |cff58be81P|r|cfffffffflates|r|cff58be81!|r")
+    title:SetText(SQP:BrandHex() .. "S|r|cffffffffimple " .. SQP:BrandHex() .. "Q|r|cffffffffuest " .. SQP:BrandHex() .. "P|r|cfffffffflates|r" .. SQP:BrandHex() .. "!|r")
 
     -- Set custom font size
     local fontFile, _, fontFlags = title:GetFont()
